@@ -89,11 +89,20 @@ export async function runSpendAgent(prompt: string) {
 
         // Return formatted invoice data as JSON string
         // Stripe amounts are in cents, so we keep them as-is for now
-        return JSON.stringify(invoices.data.map((i) => ({
+        const formatted = invoices.data.map((i) => ({
             id: i.id,
+            number: i.number,
             total: i.total,
-            description: i.description
-        })));
+            currency: i.currency,
+            status: i.status,
+            due_date: i.due_date,
+            description: i.description || "(No description)",
+            customer_email: i.customer_email,
+            hosted_invoice_url: i.hosted_invoice_url,
+            account_name: i.account_name,
+        }));
+
+        return JSON.stringify(formatted, null, 2); // Optional: format for easy reading
     }
 
     if (name === "pay_invoice") {
