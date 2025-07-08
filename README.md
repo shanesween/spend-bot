@@ -16,6 +16,8 @@
 - **Language**: TypeScript 5
 - **Styling**: Tailwind CSS 4
 - **UI**: React 19 with modern hooks
+- **Component Library**: shadcn/ui with New York style
+- **Icons**: Lucide React
 - **Fonts**: Geist Sans & Geist Mono (Vercel's custom fonts)
 
 ### Backend & AI
@@ -43,8 +45,17 @@
    - Modern development environment with Turbopack
    - Proper project structure with src/ organization
    - Environment variable configuration
+   - shadcn/ui component library integration
 
-2. **AI Agent System**
+2. **UI Component System**
+
+   - shadcn/ui setup with New York style variant
+   - Custom component library in `src/components/ui/`
+   - Available components: Button, Card, Input, ScrollArea
+   - Chat interface component in `src/components/chat/`
+   - Tailwind CSS v4 with custom dark mode variant
+
+3. **AI Agent System**
 
    - OpenAI integration with function calling
    - Two core financial functions:
@@ -52,22 +63,22 @@
      - `pay_invoice`: Processes invoice payments
    - API endpoint at `/api/agent` for agent interactions
 
-3. **Payment Integration**
+4. **Payment Integration**
 
    - Stripe SDK integration
    - Invoice management capabilities
    - Payment processing functionality
 
-4. **API Architecture**
+5. **API Architecture**
    - RESTful API design
    - Error handling and validation
    - Proper HTTP status codes
 
 ### 🚧 Current State
 
-- **Frontend**: Still using default Next.js template (needs custom UI)
-- **AI Agent**: Core logic implemented but needs frontend interface
-- **Stripe**: Backend integration complete, needs frontend payment flows
+- **Frontend**: shadcn/ui components integrated, chat interface created
+- **AI Agent**: Core logic implemented with chat interface ready
+- **Stripe**: Backend integration complete, ready for payment flows
 
 ---
 
@@ -80,11 +91,21 @@ spend-bot/
 │   │   ├── api/agent/route.ts     # AI agent API endpoint
 │   │   ├── layout.tsx             # Root layout with fonts
 │   │   ├── page.tsx               # Homepage (default template)
-│   │   └── globals.css            # Global styles
+│   │   └── globals.css            # Global styles with Tailwind v4
+│   ├── components/
+│   │   ├── ui/                    # shadcn/ui components
+│   │   │   ├── button.tsx         # Button component
+│   │   │   ├── card.tsx           # Card component
+│   │   │   ├── input.tsx          # Input component
+│   │   │   └── scroll-area.tsx    # ScrollArea component
+│   │   └── chat/
+│   │       └── index.tsx          # Chat interface component
 │   └── lib/
 │       ├── agent.ts               # AI agent logic
-│       └── stripe.ts              # Stripe configuration
+│       ├── stripe.ts              # Stripe configuration
+│       └── utils.ts               # Utility functions
 ├── public/                        # Static assets
+├── components.json                # shadcn/ui configuration
 ├── package.json                   # Dependencies & scripts
 └── Configuration files
 ```
@@ -95,18 +116,18 @@ spend-bot/
 
 ### High Priority
 
-1. **Custom Frontend UI**
+1. **Frontend UI Enhancement**
 
-   - Replace default Next.js template
-   - Create chat interface for AI agent
-   - Build invoice management dashboard
+   - Integrate chat interface with AI agent API
+   - Build invoice management dashboard using shadcn/ui components
    - Add payment forms and flows
+   - Implement dark mode toggle
 
 2. **User Experience**
-   - Real-time chat with AI agent
-   - Invoice listing and payment interface
+   - Real-time chat with AI agent using chat component
+   - Invoice listing and payment interface with shadcn/ui
    - Loading states and error handling
-   - Responsive design
+   - Responsive design with modern UI components
 
 ### Medium Priority
 
@@ -141,12 +162,13 @@ spend-bot/
 - **Type Safety**: Full TypeScript implementation
 - **AI Integration**: Sophisticated function calling with OpenAI
 - **Payment Processing**: Real Stripe integration
+- **UI Component Library**: shadcn/ui with modern design system
 - **Clean Architecture**: Well-organized code structure
 - **Development Experience**: Fast refresh with Turbopack
 
 ### Areas for Growth
 
-- **Frontend Development**: Need custom UI components
+- **Frontend Integration**: Connect chat interface with AI agent API
 - **State Management**: Consider adding React state management
 - **Testing**: No test files yet
 - **Documentation**: Could benefit from more detailed docs
@@ -161,7 +183,8 @@ This project demonstrates:
 - **Full-Stack Development**: Next.js + API routes + external services
 - **AI/ML Integration**: OpenAI function calling and natural language processing
 - **Payment Processing**: Real-world Stripe integration
-- **Modern Web Development**: TypeScript, Tailwind, modern React patterns
+- **Modern Web Development**: TypeScript, Tailwind CSS v4, modern React patterns
+- **UI Component System**: shadcn/ui with custom design system
 - **API Design**: RESTful endpoints with proper error handling
 - **Environment Management**: Proper configuration and secrets handling
 
@@ -169,10 +192,45 @@ This project demonstrates:
 
 ## 📝 Development Notes
 
-**Current Phase**: Backend foundation complete, frontend development needed  
-**Estimated Completion**: 70% backend, 20% frontend  
-**Key Achievement**: Working AI agent with Stripe integration  
-**Next Milestone**: Custom user interface for the AI agent
+**Current Phase**: Backend foundation complete, UI components integrated  
+**Estimated Completion**: 70% backend, 60% frontend  
+**Key Achievement**: Working AI agent with Stripe integration and shadcn/ui components  
+**Next Milestone**: Connect chat interface with AI agent API
+
+---
+
+## 🎨 UI Component System Setup
+
+### shadcn/ui Integration
+
+This project uses **shadcn/ui** as the component framework, providing a modern, accessible, and customizable component library built on top of Tailwind CSS.
+
+#### Setup Process
+
+1. **Installation**: Added `@shadcn/ui` dependency to the project
+2. **Configuration**: Created `components.json` with New York style variant
+3. **Component Installation**: Used shadcn/ui CLI to add components:
+   ```bash
+   npx shadcn@latest add button
+   npx shadcn@latest add card
+   npx shadcn@latest add input
+   npx shadcn@latest add scroll-area
+   ```
+
+#### Available Components
+
+- **Button**: Versatile button component with multiple variants
+- **Card**: Container component for content organization
+- **Input**: Form input component with proper styling
+- **ScrollArea**: Custom scrollable area component
+- **Chat Interface**: Custom chat component in `src/components/chat/`
+
+#### Design System
+
+- **Style**: New York variant for modern, clean aesthetics
+- **Colors**: Slate base color with CSS variables for theming
+- **Icons**: Lucide React icon library
+- **Dark Mode**: Custom dark variant using Tailwind CSS v4
 
 ---
 
