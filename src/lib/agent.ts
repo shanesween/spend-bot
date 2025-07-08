@@ -82,7 +82,9 @@ export async function runSpendAgent(prompt: string) {
         // Fetch open invoices from Stripe (limited to 5 for performance)
         const invoices = await stripe.invoices.list({
             status: "open",
-            limit: 5
+            // TODO: get customer id from stripe dynamically
+            customer: process.env.STRIPE_CUSTOMER_ID,
+            limit: 5,
         });
 
         // Return formatted invoice data as JSON string
