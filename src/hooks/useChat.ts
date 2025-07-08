@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Message, ChatResponse } from "@/types/chat";
+import { Message, ChatResponse, InvoiceSummary } from "@/types/chat";
 import { CHAT_CONSTANTS } from "@/constants/chat";
 
 export function useChat() {
@@ -58,9 +58,23 @@ export function useChat() {
 
             const data: ChatResponse = await res.json();
 
+            // Try parsing the result as a list of invoices
+            let invoices: InvoiceSummary[] | undefined = undefined;
+            try {
+                const parsed = JSON.parse(data.result);
+                if (Array.isArray(parsed) && parsed.every(i => i.id && i.total)) {
+                    invoices = parsed as InvoiceSummary[];
+                }
+            } catch {
+                // TODO: handle this case
+                // not JSON, fallback to string content
+                console.log("🚀 ~ sendMessage ~ data.result:", data.result)
+            }
+
             const botMessage: Message = {
                 sender: "bot",
-                content: data.result,
+                content: invoices ? undefined : data.result,
+                invoices,
                 timestamp: new Date(),
                 id: crypto.randomUUID()
             };
