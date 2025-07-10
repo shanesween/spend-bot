@@ -2,6 +2,7 @@ import { Message as MessageType } from "@/types/chat";
 import { InvoiceCard } from "./InvoiceCard";
 import { InvoiceSelectionCard } from "./InvoiceSelectionCard";
 import { PaymentConfirmationCard } from "./PaymentConfirmationCard";
+import { PaymentMethodSetupCard } from "./PaymentMethodSetupCard";
 
 interface MessageProps {
     message: MessageType;
@@ -44,6 +45,15 @@ export function Message({ message }: MessageProps) {
                         message.interactive.onAction && (
                             <PaymentConfirmationCard
                                 invoice={message.interactive.selectedInvoice}
+                                onAction={message.interactive.onAction}
+                            />
+                        )}
+
+                    {message.interactive.type === 'payment_method_setup' &&
+                        message.interactive.setupIntentClientSecret &&
+                        message.interactive.onAction && (
+                            <PaymentMethodSetupCard
+                                setupIntentClientSecret={message.interactive.setupIntentClientSecret}
                                 onAction={message.interactive.onAction}
                             />
                         )}

@@ -5,6 +5,7 @@
  * - List unpaid invoices from Stripe
  * - Process invoice payments
  * - Initiate interactive payment flows
+ * - Manage payment methods
  * - Provide natural language responses about financial data
  * 
  * Uses OpenAI's function calling feature to execute specific financial operations
@@ -12,7 +13,13 @@
  */
 
 import { getAIResponse } from "./ai-service";
-import { listUnpaidInvoices, payInvoice, initiatePaymentFlow } from "./functions";
+import {
+    listUnpaidInvoices,
+    payInvoice,
+    initiatePaymentFlow,
+    listPaymentMethods,
+    initiatePaymentMethodSetup
+} from "./functions";
 import { InteractiveMessage } from "@/types/chat";
 
 export interface AgentResponse {
@@ -56,16 +63,49 @@ export async function runSpendAgent(prompt: string): Promise<AgentResponse> {
                         content: "Error: Invoice ID is required for payment."
                     };
                 }
-                const paymentResult = await payInvoice(args.invoiceId);
-                return {
-                    content: paymentResult
-                };
+                try {
+                    const paymentResult = await payInvoice(args.invoiceId);
+                    return {
+                        content: paymentResult
+                    };
+                } catch (error) {
+                    if (error instanceof Error && error.message === 'NO_PAYMENT_METHOD') {
+                        // Initiate payment method setup flow
+                        const setupFlow = await initiatePaymentMethodSetup();
+                        return {
+                            content: "You need to add a payment method first. Let's set that up:",
+                            interactive: setupFlow
+                        };
+                    }
+                    throw error;
+                }
 
             case "initiate_payment_flow":
                 const interactiveFlow = await initiatePaymentFlow();
                 return {
                     content: "Please select an invoice to pay:",
                     interactive: interactiveFlow
+                };
+
+            case "list_payment_methods":
+                const paymentMethods = await listPaymentMethods();
+                if (paymentMethods.length === 0) {
+                    return {
+                        content: "You don't have any payment methods set up yet. Would you like to add one?"
+                    };
+                }
+                return {
+                    content: `You have ${paymentMethods.length} payment method(s):\n\n` +
+                        paymentMethods.map(pm =>
+                            `• ${pm.card?.brand.toUpperCase()} ending in ${pm.card?.last4} (expires ${pm.card?.exp_month}/${pm.card?.exp_year})`
+                        ).join('\n')
+                };
+
+            case "setup_payment_method":
+                const setupFlow = await initiatePaymentMethodSetup();
+                return {
+                    content: "Let's add a new payment method:",
+                    interactive: setupFlow
                 };
 
             default:
