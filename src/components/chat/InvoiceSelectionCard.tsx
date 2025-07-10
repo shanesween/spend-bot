@@ -51,7 +51,6 @@ export function InvoiceSelectionCard({ invoices, onAction }: InvoiceSelectionCar
         <Card className="w-full">
             <CardHeader>
                 <CardTitle className="text-lg">💳 Select Invoice to Pay</CardTitle>
-                <p className="text-sm text-gray-600">Choose which invoice you&apos;d like to pay:</p>
             </CardHeader>
             <CardContent className="space-y-4">
                 {invoices.map((invoice) => (

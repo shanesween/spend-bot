@@ -1,5 +1,5 @@
 import stripe from "./stripe";
-import { InvoiceSummary, InteractiveMessage } from "@/types/chat";
+import { InvoiceSummary, InteractiveMessage, PaymentMethod } from "@/types/chat";
 
 /**
  * Stripe function implementations for the AI agent
@@ -34,16 +34,20 @@ export async function listUnpaidInvoices(): Promise<InvoiceSummary[]> {
 /**
  * Pay an invoice by ID
  * @param invoiceId - The ID of the invoice to pay
- * @returns Promise<string> - Success message with payment details
+ * @returns Promise<string> - Success message with payment details or error requiring payment method setup
  */
 export async function payInvoice(invoiceId: string): Promise<string> {
     try {
         const paid = await stripe.invoices.pay(invoiceId);
 
-        return `Invoice ${paid.id} paid successfully for ${paid.amount_paid / 100} ${paid.currency.toUpperCase()}`;
+        return `✅ Invoice ${paid.id} paid successfully for ${paid.amount_paid / 100} ${paid.currency.toUpperCase()}`;
 
-    } catch (error) {
-        return `Error paying invoice ${invoiceId}: ${error}`
+    } catch (error: unknown) {
+        // Check if the error is due to missing payment method
+        if (error instanceof Error && error.message.includes('default_payment_method')) {
+            throw new Error('NO_PAYMENT_METHOD');
+        }
+        return `❌ Error paying invoice ${invoiceId}: ${error}`;
     }
 }
 
@@ -61,5 +65,88 @@ export async function initiatePaymentFlow(): Promise<InteractiveMessage> {
     return {
         type: 'invoice_selection',
         invoices: invoices
+    };
+}
+
+/**
+ * Create a Setup Intent for collecting payment methods
+ * @returns Promise<string> - Client secret for the Setup Intent
+ */
+export async function createSetupIntent(): Promise<string> {
+    const customerId = process.env.STRIPE_CUSTOMER_ID;
+    if (!customerId) {
+        throw new Error("Customer ID not configured");
+    }
+
+    const setupIntent = await stripe.setupIntents.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        usage: 'off_session',
+        metadata: {
+            purpose: 'default_payment_method'
+        }
+    });
+
+    return setupIntent.client_secret!;
+}
+
+/**
+ * List payment methods for the customer
+ * @returns Promise<PaymentMethod[]> - Array of payment methods
+ */
+export async function listPaymentMethods(): Promise<PaymentMethod[]> {
+    const customerId = process.env.STRIPE_CUSTOMER_ID;
+    if (!customerId) {
+        throw new Error("Customer ID not configured");
+    }
+
+    const paymentMethods = await stripe.paymentMethods.list({
+        customer: customerId,
+        type: 'card',
+    });
+
+    return paymentMethods.data.map(pm => ({
+        id: pm.id,
+        type: pm.type,
+        card: pm.card ? {
+            brand: pm.card.brand,
+            last4: pm.card.last4,
+            exp_month: pm.card.exp_month,
+            exp_year: pm.card.exp_year,
+        } : undefined,
+        created: pm.created,
+    }));
+}
+
+/**
+ * Set a payment method as default for the customer
+ * @param paymentMethodId - The ID of the payment method to set as default
+ * @returns Promise<string> - Success message
+ */
+export async function setDefaultPaymentMethod(paymentMethodId: string): Promise<string> {
+    const customerId = process.env.STRIPE_CUSTOMER_ID;
+    if (!customerId) {
+        throw new Error("Customer ID not configured");
+    }
+
+    await stripe.customers.update(customerId, {
+        invoice_settings: {
+            default_payment_method: paymentMethodId,
+        },
+    });
+
+    return `✅ Payment method set as default successfully`;
+}
+
+/**
+ * Initiate payment method setup flow
+ * @returns Promise<InteractiveMessage> - Interactive message for payment method setup
+ */
+export async function initiatePaymentMethodSetup(): Promise<InteractiveMessage> {
+    const clientSecret = await createSetupIntent();
+
+    return {
+        type: 'payment_method_setup',
+        setupIntentClientSecret: clientSecret
     };
 } 

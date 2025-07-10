@@ -1,5 +1,5 @@
 import { runSpendAgent } from "@/lib/agent";
-import { payInvoice, listUnpaidInvoices } from "@/lib/functions";
+import { payInvoice, listUnpaidInvoices, setDefaultPaymentMethod, createSetupIntent } from "@/lib/functions";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -37,11 +37,53 @@ export async function POST(req: Request) {
                         return NextResponse.json({ error: "Invoice ID is required" }, { status: 400 });
                     }
 
-                    const paymentResult = await payInvoice(paymentInvoiceId);
-                    return NextResponse.json({ result: paymentResult });
+                    try {
+                        const paymentResult = await payInvoice(paymentInvoiceId);
+                        return NextResponse.json({ result: paymentResult });
+                    } catch (error) {
+                        if (error instanceof Error && error.message === 'NO_PAYMENT_METHOD') {
+                            try {
+                                // Create a real Setup Intent for payment method collection
+                                const clientSecret = await createSetupIntent();
+                                return NextResponse.json({
+                                    result: "You need to add a payment method first. Let's set that up:",
+                                    interactive: {
+                                        type: 'payment_method_setup',
+                                        setupIntentClientSecret: clientSecret
+                                    }
+                                });
+                            } catch (setupError) {
+                                console.error('Error creating Setup Intent:', setupError);
+                                return NextResponse.json({
+                                    error: "Failed to initialize payment method setup. Please check your Stripe configuration."
+                                }, { status: 500 });
+                            }
+                        }
+                        throw error;
+                    }
+
+                case "setup_payment_method":
+                    const paymentMethodId = action.data?.paymentMethodId;
+                    if (!paymentMethodId) {
+                        return NextResponse.json({ error: "Payment method ID is required" }, { status: 400 });
+                    }
+
+                    try {
+                        // Set the payment method as default for the customer
+                        await setDefaultPaymentMethod(paymentMethodId);
+
+                        return NextResponse.json({
+                            result: "🎉 Payment method added successfully! Your card has been securely saved and set as your default payment method. You can now pay your invoices. Would you like to try paying an invoice now?"
+                        });
+                    } catch (error) {
+                        console.error('Error setting default payment method:', error);
+                        return NextResponse.json({
+                            result: "⚠️ Payment method was set up but there was an issue setting it as default. You can still use it to pay invoices."
+                        });
+                    }
 
                 case "cancel_flow":
-                    return NextResponse.json({ result: "Payment cancelled." });
+                    return NextResponse.json({ result: "Operation cancelled." });
 
                 default:
                     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
