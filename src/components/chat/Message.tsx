@@ -1,5 +1,7 @@
 import { Message as MessageType } from "@/types/chat";
 import { InvoiceCard } from "./InvoiceCard";
+import { InvoiceSelectionCard } from "./InvoiceSelectionCard";
+import { PaymentConfirmationCard } from "./PaymentConfirmationCard";
 
 interface MessageProps {
     message: MessageType;
@@ -25,15 +27,39 @@ export function Message({ message }: MessageProps) {
                 )}
             </div>
 
+            {/* Interactive Elements */}
+            {message.interactive && (
+                <div className="mb-4">
+                    {message.interactive.type === 'invoice_selection' &&
+                        message.interactive.invoices &&
+                        message.interactive.onAction && (
+                            <InvoiceSelectionCard
+                                invoices={message.interactive.invoices}
+                                onAction={message.interactive.onAction}
+                            />
+                        )}
+
+                    {message.interactive.type === 'payment_confirmation' &&
+                        message.interactive.selectedInvoice &&
+                        message.interactive.onAction && (
+                            <PaymentConfirmationCard
+                                invoice={message.interactive.selectedInvoice}
+                                onAction={message.interactive.onAction}
+                            />
+                        )}
+                </div>
+            )}
+
+            {/* Regular Content */}
             {message.invoices ? (
                 <div className="space-y-4">
                     {message.invoices.map((invoice) => (
                         <InvoiceCard key={invoice.id} invoice={invoice} />
                     ))}
                 </div>
-            ) : (
+            ) : message.content ? (
                 <div className="whitespace-pre-wrap break-words">{message.content}</div>
-            )}
+            ) : null}
         </div>
     );
 }
