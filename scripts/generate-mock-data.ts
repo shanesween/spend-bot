@@ -241,22 +241,21 @@ async function generateMockData() {
       // Finalize invoice
       await stripe.invoices.finalizeInvoice(invoice.id);
 
-      // Randomly mark some as paid
+      // Randomly mark some as paid or uncollectible
       const status = getRandomStatus();
-      if (status === 'paid') {
-        await stripe.invoices.pay(invoice.id, {
-          source: 'tok_visa', // Test token
-        });
-      } else if (status === 'uncollectible') {
+      if (status === 'uncollectible') {
         await stripe.invoices.markUncollectible(invoice.id);
       }
+      // Note: We skip automatic payment to avoid token issues
+      // Invoices will remain as 'open' for testing payment flows
 
       const updatedInvoice = await stripe.invoices.retrieve(invoice.id);
       invoices.push(updatedInvoice);
 
       const total = (updatedInvoice.total / 100).toFixed(2);
-      const statusEmoji = status === 'paid' ? '✅' : status === 'open' ? '⏳' : '❌';
-      console.log(`   ${statusEmoji} Created invoice: ${updatedInvoice.number} - $${total} (${status})`);
+      const actualStatus = updatedInvoice.status;
+      const statusEmoji = actualStatus === 'paid' ? '✅' : actualStatus === 'open' ? '⏳' : '❌';
+      console.log(`   ${statusEmoji} Created invoice: ${updatedInvoice.number} - $${total} (${actualStatus})`);
     }
 
     // Summary

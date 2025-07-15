@@ -51,6 +51,21 @@ async function cleanupMockData() {
       }
     }
 
+    // Delete all prices first (required before deleting products)
+    console.log('\n💰 Deleting prices...');
+    const prices = await stripe.prices.list({ limit: 100 });
+    let priceCount = 0;
+    
+    for (const price of prices.data) {
+      try {
+        await stripe.prices.update(price.id, { active: false });
+        priceCount++;
+        console.log(`   ✅ Deactivated price: ${price.id}`);
+      } catch (error) {
+        console.log(`   ⚠️  Could not deactivate price ${price.id}: ${error.message}`);
+      }
+    }
+    
     // Delete all products
     console.log('\n📦 Deleting products...');
     const products = await stripe.products.list({ limit: 100 });
@@ -70,6 +85,7 @@ async function cleanupMockData() {
     console.log('\n📊 Cleanup Summary:');
     console.log(`   🧾 Invoices deleted: ${invoiceCount}`);
     console.log(`   👥 Customers deleted: ${customerCount}`);
+    console.log(`   💰 Prices deactivated: ${priceCount}`);
     console.log(`   📦 Products deleted: ${productCount}`);
 
     console.log('\n🎉 Cleanup completed successfully!');
