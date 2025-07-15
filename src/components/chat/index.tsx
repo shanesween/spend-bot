@@ -63,7 +63,7 @@ export default function ChatUI() {
                 </div>
             )}
 
-            <Card className="h-[400px] overflow-hidden">
+            <Card className="h-[72vh] overflow-hidden">
                 <CardContent className="p-4 h-full">
                     <ScrollArea className="h-full pr-4">
                         <div className="space-y-4">

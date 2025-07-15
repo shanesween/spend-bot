@@ -105,6 +105,23 @@ yarn dev
 # Open http://localhost:3000
 ```
 
+### Generate Mock Data (Optional)
+
+To populate your Stripe test environment with realistic data:
+
+```bash
+# Generate mock customers, products, and invoices
+npm run mock:generate
+
+# Clean up all mock data when done
+npm run mock:cleanup
+```
+
+The mock data script creates:
+- **5 Customers:** Various business types with complete contact information
+- **7 Products:** Different service offerings with pricing
+- **15 Invoices:** Mix of paid, open, and uncollectible invoices with multiple line items
+
 ### Test the Payment Flow
 
 1. **Start the app** and open the chat interface
